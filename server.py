@@ -41,7 +41,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	self.data = self.request.recv(1024).strip()
         results = re.search('(?<=GET )(.*)(?= HTTP/)', self.data)
 	if results:
-		urlExtentions =results.group(0)
+	    urlExtentions =results.group(0)
 
 	#set default path to same path of this (server.py) file
         root = os.getcwd()
@@ -49,8 +49,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
 	#check if the path exist
 	if not os.path.exists(self.fullPath):
-		self.request.sendall(self.error())
-		return
+	    self.request.sendall(self.error())
+	    return
 
 	self.handleResponse(self.fullPath)
 
@@ -62,19 +62,19 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	#check the file type and set the mimetype
 	response_good = True
 	if fullPath.endswith(".css"):
-		mimetype = "text/css"
+	    mimetype = "text/css"
 	elif fullPath.endswith(".html"):
-		mimetype = "text/html"
+	    mimetype = "text/html"
 	elif fullPath.endswith("/") :
-		mimetype = "text/html"
-		fullPath = fullPath + indexHTMLFile
+	    mimetype = "text/html"
+	    fullPath = fullPath + indexHTMLFile
 	else:
-		response_good = False
+	    response_good = False
 	
 	if response_good:
-		response = self.displayFile(fullPath, mimetype)
+	    response = self.displayFile(fullPath, mimetype)
 	else:
-		response = self.error()	
+	    response = self.error()	
 
 	self.request.sendall(response)
 
@@ -87,7 +87,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
     def displayFile(self, fullPath, mimetype):
 	return ("HTTP/1.1 200 OK\r\n" +
-		"Content-Type: %s\n\n" % mimetype +
+	        "Content-Type: %s\n\n" % mimetype +
 		open(fullPath).read());
 
 if __name__ == "__main__":
