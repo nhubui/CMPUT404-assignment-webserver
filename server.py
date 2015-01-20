@@ -1,7 +1,11 @@
-import SocketServer
 # coding: utf-8
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+import os
+import SocketServer
+import re
+
+
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, Nhu Bui
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,9 +34,61 @@ import SocketServer
 class MyWebServer(SocketServer.BaseRequestHandler):
     
     def handle(self):
-        self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall("OK")
+	wwwDirectory = "/www"
+	urlExtentions =""
+
+	#parse the url request
+	self.data = self.request.recv(1024).strip()
+        results = re.search('(?<=GET )(.*)(?= HTTP/)', self.data)
+	if results:
+		urlExtentions =results.group(0)
+
+	#set default path to same path of this (server.py) file
+        root = os.getcwd()
+	self.fullPath = root + wwwDirectory + urlExtentions
+
+	#check if the path exist
+	if not os.path.exists(self.fullPath):
+		self.request.sendall(self.error())
+		return
+
+	self.handleResponse(self.fullPath)
+
+    def handleResponse(self, fullPath):
+	indexHTMLFile = "/index.html"
+	response = ""
+	mimetype= ""
+
+	#check the file type and set the mimetype
+	response_good = True
+	if fullPath.endswith(".css"):
+		mimetype = "text/css"
+	elif fullPath.endswith(".html"):
+		mimetype = "text/html"
+	elif fullPath.endswith("/") :
+		mimetype = "text/html"
+		fullPath = fullPath + indexHTMLFile
+	else:
+		response_good = False
+	
+	if response_good:
+		response = self.displayFile(fullPath, mimetype)
+	else:
+		response = self.error()	
+
+	self.request.sendall(response)
+
+
+    def error(self):
+	return ("HTTP/1.1 404 NOT FOUND\r\n" +
+		"Content-Type: text/html\n\n" +
+		"<h3>404 NOT FOUND</h3>")
+    
+
+    def displayFile(self, fullPath, mimetype):
+	return ("HTTP/1.1 200 OK\r\n" +
+		"Content-Type: %s\n\n" % mimetype +
+		open(fullPath).read());
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
