@@ -36,6 +36,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     def handle(self):
 	wwwDirectory = "/www"
 	urlExtentions =""
+	indexHTMLFile = "/index.html"
 
 	#parse the url request
 	self.data = self.request.recv(1024).strip()
@@ -47,6 +48,10 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         root = os.getcwd()
 	self.fullPath = root + wwwDirectory + urlExtentions
 
+	#default to display index.html
+	if self.fullPath.endswith("/"):
+	    self.fullPath = self.fullPath + indexHTMLFile
+	    
 	#check if the path exist
 	if not os.path.exists(self.fullPath):
 	    self.request.sendall(self.error())
@@ -55,7 +60,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	self.handleResponse(self.fullPath)
 
     def handleResponse(self, fullPath):
-	indexHTMLFile = "/index.html"
 	response = ""
 	mimetype= ""
 
@@ -65,9 +69,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	    mimetype = "text/css"
 	elif fullPath.endswith(".html"):
 	    mimetype = "text/html"
-	elif fullPath.endswith("/") :
-	    mimetype = "text/html"
-	    fullPath = fullPath + indexHTMLFile
 	else:
 	    response_good = False
 	
@@ -76,6 +77,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	else:
 	    response = self.error()	
 
+	#Send response 
 	self.request.sendall(response)
 
 
