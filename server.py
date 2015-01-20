@@ -37,6 +37,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	wwwDirectory = "www"
 	urlExtentions =""
 	indexHTMLFile = "index.html"
+	response = ""
 
 	#parse the url request
 	self.data = self.request.recv(1024).strip()
@@ -48,20 +49,26 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         root = os.getcwd()
 	self.fullPath = root + "/" + wwwDirectory + urlExtentions
 
-	#default to display index.html
+	#if no file specified, default to display index.html
 	if self.fullPath.endswith("/"):
 	    self.fullPath = self.fullPath + indexHTMLFile
-	    
-	#check if the path exist
-	if not os.path.exists(self.fullPath):
-	    self.request.sendall(self.error())
-	    return
 
-	self.handleResponse(self.fullPath)
+	response = self.setResponse(self.fullPath, urlExtentions)
+	self.request.sendall(response)
 
-    def handleResponse(self, fullPath):
+
+    def setResponse(self, fullPath, urlExtentions):
 	response = ""
 	mimetype= ""
+
+	#check if file is in the www or deeper folder ONLY
+	directory = os.path.split(urlExtentions)
+	if not directory[0] == "/" and not directory[0] == "/deep":
+	    return self.error()
+
+	#check if the path exist
+	if not os.path.exists(self.fullPath):
+	    return self.error()
 
 	#check the file type and set the mimetype
 	response_good = True
@@ -76,9 +83,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 	    response = self.displayFile(fullPath, mimetype)
 	else:
 	    response = self.error()	
-
-	#Send response 
-	self.request.sendall(response)
+	return response
 
 
     def error(self):
@@ -89,7 +94,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
     def displayFile(self, fullPath, mimetype):
 	return ("HTTP/1.1 200 OK\r\n" +
-	        "Content-Type: %s\n\n" % mimetype +
+	        "Content-Type: " + mimetype + "\n\n"+
 		open(fullPath).read());
 
 if __name__ == "__main__":
