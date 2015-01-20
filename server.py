@@ -34,9 +34,9 @@ import re
 class MyWebServer(SocketServer.BaseRequestHandler):
     
     def handle(self):
-	wwwDirectory = "/www"
+	wwwDirectory = "www"
 	urlExtentions =""
-	indexHTMLFile = "/index.html"
+	indexHTMLFile = "index.html"
 
 	#parse the url request
 	self.data = self.request.recv(1024).strip()
@@ -46,7 +46,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
 	#set default path to same path of this (server.py) file
         root = os.getcwd()
-	self.fullPath = root + wwwDirectory + urlExtentions
+	self.fullPath = root + "/" + wwwDirectory + urlExtentions
 
 	#default to display index.html
 	if self.fullPath.endswith("/"):
